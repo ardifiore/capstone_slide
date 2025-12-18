@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seq2Seq Architecture Diagram</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    #root { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function Seq2SeqArchitectureDiagram() {
+      const [activeStep, setActiveStep] = useState(0);
+      const [isAnimating, setIsAnimating] = useState(true);
+
+      const sourceSentence = ["<BOS>", "The", "quick", "brown", "fox"];
+      const targetInput = ["<BOS>", "jumps", "over"];
+      const targetOutput = ["jumps", "over", "<EOS>"];
+
+      useEffect(() => {
+        if (!isAnimating) return;
+        const timer = setInterval(() => {
+          setActiveStep(prev => (prev + 1) % 6);
+        }, 2500);
+        return () => clearInterval(timer);
+      }, [isAnimating]);
+
+      const stepDescriptions = [
+        "1. Input Embedding: Source tokens are converted to 768-dim embeddings",
+        "2. Encoder LSTM: 2-layer LSTM processes embeddings → hidden states (h₁...h₅)",
+        "3. Decoder Input: Target tokens embedded, initialized with encoder final state",
+        "4. Luong Attention: Score = h_dec · W_a · h_enc^T → softmax → context vector",
+        "5. Context Fusion: Concatenate [decoder output, context] → Linear(2560→768)",
+        "6. Output Projection: Linear(768→vocab) with tied weights → next token prediction"
+      ];
+
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%)',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          color: '#e0e0e0',
+          padding: '24px',
+          boxSizing: 'border-box'
+        }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h1 style={{
+              fontSize: '2rem',
+              fontWeight: 700,
+              background: 'linear-gradient(90deg, #00d4ff, #7c3aed, #f472b6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: '8px',
+              letterSpacing: '-0.02em'
+            }}>
+              Seq2Seq with Luong Attention
+            </h1>
+            <p style={{ color: '#888', fontSize: '0.85rem' }}>
+              PyTorch Implementation • 2-Layer LSTM • Text Generation
+            </p>
+          </div>
+
+          {/* Config Badge */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '12px',
+            marginBottom: '20px',
+            flexWrap: 'wrap'
+          }}>
+            {[
+              { label: 'Embed', value: '768' },
+              { label: 'Hidden', value: '1280' },
+              { label: 'Layers', value: '2' },
+              { label: 'Vocab', value: '53.9K' }
+            ].map((cfg, i) => (
+              <div key={i} style={{
+                background: 'rgba(124, 58, 237, 0.15)',
+                border: '1px solid rgba(124, 58, 237, 0.3)',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '0.75rem'
+              }}>
+                <span style={{ color: '#a78bfa' }}>{cfg.label}:</span>{' '}
+                <span style={{ color: '#fff', fontWeight: 600 }}>{cfg.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Main SVG Diagram */}
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '20px',
+            marginBottom: '20px',
+            overflow: 'auto'
+          }}>
+            <svg viewBox="0 0 1100 620" style={{ width: '100%', maxWidth: '1100px', display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="encoderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0ea5e9" />
+                  <stop offset="100%" stopColor="#0284c7" />
+                </linearGradient>
+                <linearGradient id="decoderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </linearGradient>
+                <linearGradient id="attentionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f472b6" />
+                  <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+                <linearGradient id="embedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#22c55e" />
+                  <stop offset="100%" stopColor="#16a34a" />
+                </linearGradient>
+                <linearGradient id="outputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
+                </linearGradient>
+                
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+                </marker>
+                <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#0ea5e9" />
+                </marker>
+                <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6" />
+                </marker>
+                <marker id="arrowPink" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6" />
+                </marker>
+              </defs>
+
+              {/* Background sections */}
+              <rect x="20" y="80" width="400" height="520" rx="12" fill="rgba(14, 165, 233, 0.05)" stroke="rgba(14, 165, 233, 0.2)" strokeDasharray="4,4" />
+              <rect x="440" y="80" width="220" height="520" rx="12" fill="rgba(244, 114, 182, 0.05)" stroke="rgba(244, 114, 182, 0.2)" strokeDasharray="4,4" />
+              <rect x="680" y="80" width="400" height="520" rx="12" fill="rgba(139, 92, 246, 0.05)" stroke="rgba(139, 92, 246, 0.2)" strokeDasharray="4,4" />
+
+              {/* Section Labels */}
+              <text x="220" y="110" textAnchor="middle" fill="#0ea5e9" fontSize="14" fontWeight="600">ENCODER</text>
+              <text x="550" y="110" textAnchor="middle" fill="#f472b6" fontSize="14" fontWeight="600">ATTENTION</text>
+              <text x="880" y="110" textAnchor="middle" fill="#8b5cf6" fontSize="14" fontWeight="600">DECODER</text>
+
+              {/* Source tokens */}
+              <text x="220" y="150" textAnchor="middle" fill="#666" fontSize="11">Source Sequence (max 50 tokens)</text>
+              {sourceSentence.map((token, i) => (
+                <g key={`src-${i}`} style={{ opacity: activeStep >= 0 ? 1 : 0.3, transition: 'opacity 0.5s' }}>
+                  <rect x={60 + i * 75} y={160} width={65} height={32} rx={6}
+                    fill={token === '<BOS>' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.05)'}
+                    stroke={token === '<BOS>' ? '#22c55e' : '#444'} strokeWidth={1} />
+                  <text x={92 + i * 75} y={181} textAnchor="middle" fill={token === '<BOS>' ? '#22c55e' : '#ccc'} fontSize="11" fontWeight="500">
+                    {token}
+                  </text>
+                </g>
+              ))}
+
+              {/* Embedding arrows */}
+              {sourceSentence.map((_, i) => (
+                <line key={`emb-arrow-${i}`} x1={92 + i * 75} y1={195} x2={92 + i * 75} y2={225}
+                  stroke={activeStep >= 0 ? '#22c55e' : '#333'} strokeWidth={2} markerEnd="url(#arrowhead)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Embedding layer */}
+              <rect x="50" y="230" width="350" height="35" rx="8" fill="url(#embedGrad)" opacity={activeStep >= 0 ? 0.9 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="225" y="253" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">Embedding Layer (768-dim)</text>
+
+              {/* Encoder LSTM Layer 1 */}
+              {sourceSentence.map((_, i) => (
+                <g key={`enc-l1-${i}`}>
+                  <rect x={60 + i * 75} y={295} width={65} height={45} rx={6} fill="url(#encoderGrad)"
+                    opacity={activeStep >= 1 ? 0.9 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+                  <text x={92 + i * 75} y={315} textAnchor="middle" fill="white" fontSize="9" fontWeight="600">LSTM</text>
+                  <text x={92 + i * 75} y={330} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="8">Layer 1</text>
+                </g>
+              ))}
+
+              {/* Horizontal connections Layer 1 */}
+              {[0, 1, 2, 3].map(i => (
+                <line key={`conn1-${i}`} x1={125 + i * 75} y1={317} x2={135 + i * 75} y2={317}
+                  stroke={activeStep >= 1 ? '#0ea5e9' : '#333'} strokeWidth={2} markerEnd="url(#arrowBlue)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Vertical connections between layers */}
+              {sourceSentence.map((_, i) => (
+                <line key={`vert-${i}`} x1={92 + i * 75} y1={340} x2={92 + i * 75} y2={365}
+                  stroke={activeStep >= 1 ? '#0ea5e9' : '#333'} strokeWidth={2} style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Encoder LSTM Layer 2 */}
+              {sourceSentence.map((_, i) => (
+                <g key={`enc-l2-${i}`}>
+                  <rect x={60 + i * 75} y={370} width={65} height={45} rx={6} fill="url(#encoderGrad)"
+                    opacity={activeStep >= 1 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+                  <text x={92 + i * 75} y={390} textAnchor="middle" fill="white" fontSize="9" fontWeight="600">LSTM</text>
+                  <text x={92 + i * 75} y={405} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="8">Layer 2</text>
+                </g>
+              ))}
+
+              {/* Horizontal connections Layer 2 */}
+              {[0, 1, 2, 3].map(i => (
+                <line key={`conn2-${i}`} x1={125 + i * 75} y1={392} x2={135 + i * 75} y2={392}
+                  stroke={activeStep >= 1 ? '#0ea5e9' : '#333'} strokeWidth={2} markerEnd="url(#arrowBlue)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Encoder outputs label */}
+              <text x="225" y="445" textAnchor="middle" fill="#0ea5e9" fontSize="10">h₁, h₂, h₃, h₄, h₅ (encoder outputs)</text>
+
+              {/* Hidden state output */}
+              <rect x="310" y="460" width="90" height="35" rx="6" fill="rgba(14, 165, 233, 0.3)" stroke="#0ea5e9" opacity={activeStep >= 1 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="355" y="483" textAnchor="middle" fill="#0ea5e9" fontSize="10" fontWeight="600">(h_n, c_n)</text>
+
+              {/* Attention box */}
+              <rect x="470" y="280" width="160" height="180" rx="12" fill="rgba(244, 114, 182, 0.1)" stroke="url(#attentionGrad)" strokeWidth={2} opacity={activeStep >= 3 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="550" y="310" textAnchor="middle" fill="#f472b6" fontSize="12" fontWeight="700">Luong Attention</text>
+              <text x="550" y="330" textAnchor="middle" fill="#f472b6" fontSize="9">(General Score)</text>
+              <text x="550" y="360" textAnchor="middle" fill="#fff" fontSize="10">score(h_t, h_s) =</text>
+              <text x="550" y="378" textAnchor="middle" fill="#f472b6" fontSize="11" fontWeight="600">h_t · W_a · h_s^T</text>
+              <text x="550" y="408" textAnchor="middle" fill="#fff" fontSize="10">α = softmax(scores)</text>
+              <text x="550" y="430" textAnchor="middle" fill="#fff" fontSize="10">context = Σ α_i · h_i</text>
+              <rect x="495" y="440" width="110" height="22" rx="4" fill="rgba(244, 114, 182, 0.2)" stroke="#f472b6" strokeDasharray="3,3" />
+              <text x="550" y="455" textAnchor="middle" fill="#f472b6" fontSize="9">Linear(1280→1280)</text>
+
+              {/* Attention connections from encoder */}
+              <path d="M 400 392 Q 440 392 470 340" fill="none" stroke={activeStep >= 3 ? '#f472b6' : '#333'}
+                strokeWidth={2} strokeDasharray="5,3" markerEnd="url(#arrowPink)" style={{ transition: 'stroke 0.5s' }} />
+
+              {/* Initial state transfer */}
+              <path d="M 400 477 Q 540 520 700 477" fill="none" stroke={activeStep >= 2 ? '#8b5cf6' : '#333'}
+                strokeWidth={2} markerEnd="url(#arrowPurple)" style={{ transition: 'stroke 0.5s' }} />
+              <text x="550" y="510" textAnchor="middle" fill="#8b5cf6" fontSize="9" opacity={activeStep >= 2 ? 1 : 0.3}>Initial State</text>
+
+              {/* Target tokens */}
+              <text x="880" y="150" textAnchor="middle" fill="#666" fontSize="11">Target Sequence (max 12 tokens)</text>
+              {targetInput.map((token, i) => (
+                <g key={`tgt-${i}`} style={{ opacity: activeStep >= 2 ? 1 : 0.3, transition: 'opacity 0.5s' }}>
+                  <rect x={720 + i * 105} y={160} width={85} height={32} rx={6}
+                    fill={token === '<BOS>' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.05)'}
+                    stroke={token === '<BOS>' ? '#22c55e' : '#444'} strokeWidth={1} />
+                  <text x={762 + i * 105} y={181} textAnchor="middle" fill={token === '<BOS>' ? '#22c55e' : '#ccc'} fontSize="11" fontWeight="500">
+                    {token}
+                  </text>
+                </g>
+              ))}
+
+              {/* Decoder embedding arrows */}
+              {targetInput.map((_, i) => (
+                <line key={`dec-emb-${i}`} x1={762 + i * 105} y1={195} x2={762 + i * 105} y2={225}
+                  stroke={activeStep >= 2 ? '#22c55e' : '#333'} strokeWidth={2} markerEnd="url(#arrowhead)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Decoder Embedding layer */}
+              <rect x="710" y="230" width="290" height="35" rx="8" fill="url(#embedGrad)" opacity={activeStep >= 2 ? 0.9 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="855" y="253" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">Embedding Layer (768-dim)</text>
+
+              {/* Decoder LSTM Layer 1 */}
+              {targetInput.map((_, i) => (
+                <g key={`dec-l1-${i}`}>
+                  <rect x={720 + i * 105} y={295} width={85} height={45} rx={6} fill="url(#decoderGrad)"
+                    opacity={activeStep >= 2 ? 0.9 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+                  <text x={762 + i * 105} y={315} textAnchor="middle" fill="white" fontSize="9" fontWeight="600">LSTM</text>
+                  <text x={762 + i * 105} y={330} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="8">Layer 1</text>
+                </g>
+              ))}
+
+              {/* Decoder horizontal connections Layer 1 */}
+              {[0, 1].map(i => (
+                <line key={`dec-conn1-${i}`} x1={805 + i * 105} y1={317} x2={825 + i * 105} y2={317}
+                  stroke={activeStep >= 2 ? '#8b5cf6' : '#333'} strokeWidth={2} markerEnd="url(#arrowPurple)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Decoder vertical connections */}
+              {targetInput.map((_, i) => (
+                <line key={`dec-vert-${i}`} x1={762 + i * 105} y1={340} x2={762 + i * 105} y2={365}
+                  stroke={activeStep >= 2 ? '#8b5cf6' : '#333'} strokeWidth={2} style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Decoder LSTM Layer 2 */}
+              {targetInput.map((_, i) => (
+                <g key={`dec-l2-${i}`}>
+                  <rect x={720 + i * 105} y={370} width={85} height={45} rx={6} fill="url(#decoderGrad)"
+                    opacity={activeStep >= 2 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+                  <text x={762 + i * 105} y={390} textAnchor="middle" fill="white" fontSize="9" fontWeight="600">LSTM</text>
+                  <text x={762 + i * 105} y={405} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="8">Layer 2</text>
+                </g>
+              ))}
+
+              {/* Decoder horizontal connections Layer 2 */}
+              {[0, 1].map(i => (
+                <line key={`dec-conn2-${i}`} x1={805 + i * 105} y1={392} x2={825 + i * 105} y2={392}
+                  stroke={activeStep >= 2 ? '#8b5cf6' : '#333'} strokeWidth={2} markerEnd="url(#arrowPurple)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Attention connection from decoder */}
+              <path d="M 720 392 Q 680 392 630 370" fill="none" stroke={activeStep >= 3 ? '#f472b6' : '#333'}
+                strokeWidth={2} strokeDasharray="5,3" style={{ transition: 'stroke 0.5s' }} />
+
+              {/* Context concatenation */}
+              <rect x="710" y="440" width="290" height="35" rx="8" fill="rgba(244, 114, 182, 0.3)" stroke="#f472b6" opacity={activeStep >= 4 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="855" y="458" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">[h_dec ⊕ context] → Linear(2560→768)</text>
+              <text x="855" y="472" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="8">Concatenate + Project</text>
+
+              {/* Context arrow from attention */}
+              <path d="M 550 460 L 550 490 Q 550 510 600 510 L 700 510 Q 720 510 720 490 L 720 475" fill="none"
+                stroke={activeStep >= 4 ? '#f472b6' : '#333'} strokeWidth={2} markerEnd="url(#arrowPink)"
+                style={{ transition: 'stroke 0.5s' }} />
+
+              {/* Output projection */}
+              <rect x="710" y="500" width="290" height="35" rx="8" fill="url(#outputGrad)" opacity={activeStep >= 5 ? 1 : 0.3} style={{ transition: 'opacity 0.5s' }} />
+              <text x="855" y="518" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Output Projection (768→53.9K vocab)</text>
+              <text x="855" y="530" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="8">Tied Weights</text>
+
+              {/* Output tokens */}
+              {targetOutput.map((token, i) => (
+                <g key={`out-${i}`} style={{ opacity: activeStep >= 5 ? 1 : 0.3, transition: 'opacity 0.5s' }}>
+                  <rect x={720 + i * 105} y={555} width={85} height={32} rx={6}
+                    fill={token === '<EOS>' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
+                    stroke={token === '<EOS>' ? '#ef4444' : '#f59e0b'} strokeWidth={2} />
+                  <text x={762 + i * 105} y={576} textAnchor="middle" fill={token === '<EOS>' ? '#ef4444' : '#f59e0b'} fontSize="11" fontWeight="600">
+                    {token}
+                  </text>
+                </g>
+              ))}
+
+              {/* Output arrows */}
+              {targetOutput.map((_, i) => (
+                <line key={`out-arrow-${i}`} x1={762 + i * 105} y1={535} x2={762 + i * 105} y2={552}
+                  stroke={activeStep >= 5 ? '#f59e0b' : '#333'} strokeWidth={2} markerEnd="url(#arrowhead)"
+                  style={{ transition: 'stroke 0.5s' }} />
+              ))}
+
+              {/* Dropout indicators */}
+              <text x="52" y="270" fill="#666" fontSize="8" transform="rotate(-90, 52, 270)">dropout 0.1</text>
+              <text x="402" y="355" fill="#666" fontSize="8" transform="rotate(-90, 402, 355)">dropout 0.1</text>
+              <text x="1002" y="355" fill="#666" fontSize="8" transform="rotate(-90, 1002, 355)">dropout 0.1</text>
+            </svg>
+          </div>
+
+          {/* Step indicator */}
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '16px 20px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ color: '#888', fontSize: '0.8rem' }}>Step {activeStep + 1} of 6</span>
+              <button onClick={() => setIsAnimating(!isAnimating)} style={{
+                background: isAnimating ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
+                border: `1px solid ${isAnimating ? '#ef4444' : '#22c55e'}`,
+                color: isAnimating ? '#ef4444' : '#22c55e',
+                padding: '4px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontFamily: 'inherit'
+              }}>
+                {isAnimating ? '⏸ Pause' : '▶ Play'}
+              </button>
+            </div>
+            
+            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0, fontWeight: 500, minHeight: '24px' }}>
+              {stepDescriptions[activeStep]}
+            </p>
+
+            {/* Step dots */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              {stepDescriptions.map((_, i) => (
+                <button key={i} onClick={() => { setActiveStep(i); setIsAnimating(false); }} style={{
+                  width: '32px',
+                  height: '6px',
+                  borderRadius: '3px',
+                  border: 'none',
+                  background: i === activeStep ? '#7c3aed' : 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  transition: 'background 0.3s'
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Example sentence explanation */}
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '20px'
+          }}>
+            <h3 style={{ color: '#fff', margin: '0 0 12px 0', fontSize: '0.95rem' }}>
+              📝 Example: Sentence Completion Task
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              <div style={{
+                background: 'rgba(14, 165, 233, 0.1)',
+                border: '1px solid rgba(14, 165, 233, 0.3)',
+                borderRadius: '8px',
+                padding: '12px'
+              }}>
+                <div style={{ color: '#0ea5e9', fontSize: '0.75rem', marginBottom: '6px', fontWeight: 600 }}>SOURCE (Encoder Input)</div>
+                <div style={{ color: '#fff', fontSize: '0.9rem' }}>
+                  <span style={{ color: '#22c55e' }}>&lt;BOS&gt;</span> The quick brown fox
+                </div>
+                <div style={{ color: '#666', fontSize: '0.7rem', marginTop: '4px' }}>Context prefix to complete</div>
+              </div>
+              
+              <div style={{
+                background: 'rgba(139, 92, 246, 0.1)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                borderRadius: '8px',
+                padding: '12px'
+              }}>
+                <div style={{ color: '#8b5cf6', fontSize: '0.75rem', marginBottom: '6px', fontWeight: 600 }}>TARGET INPUT (Decoder Input)</div>
+                <div style={{ color: '#fff', fontSize: '0.9rem' }}>
+                  <span style={{ color: '#22c55e' }}>&lt;BOS&gt;</span> jumps over
+                </div>
+                <div style={{ color: '#666', fontSize: '0.7rem', marginTop: '4px' }}>Teacher-forced during training</div>
+              </div>
+              
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: '8px',
+                padding: '12px'
+              }}>
+                <div style={{ color: '#f59e0b', fontSize: '0.75rem', marginBottom: '6px', fontWeight: 600 }}>TARGET OUTPUT (Predictions)</div>
+                <div style={{ color: '#fff', fontSize: '0.9rem' }}>
+                  jumps over <span style={{ color: '#ef4444' }}>&lt;EOS&gt;</span>
+                </div>
+                <div style={{ color: '#666', fontSize: '0.7rem', marginTop: '4px' }}>Cross-entropy loss target</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Seq2SeqArchitectureDiagram />);
+  </script>
+</body>
+</html>
