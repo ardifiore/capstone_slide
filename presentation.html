@@ -148,17 +148,16 @@ Anthony DiFiore
 <p>When deliberating about how to design a chatbot capable of context-driven next word prediction, I wanted to explore options beyond the standard N-gram model. Because of their fixed, short window of preceding words, N-gram models are incapable of capturing long-term dependencies in a sentence, and rely strictly on the statistical frequency of co-occurring words.</p>
 <p>Consider the sentence, “The cat, which was small and cute, sat on the mat”, where “mat” is the last word being predicted. A trigram model would only see “on the <strong><em>”, and a 4-gram model would only see ”sat on the </em></strong>_”, and the context about the small cat would be long gone.</p>
 </section>
-<section id="the-solution" class="slide level2 scrollable">
-<h2>The Solution</h2>
+<section id="the-algorithm" class="slide level2 scrollable">
+<h2>The Algorithm</h2>
 <p>To address this challenge, I used two very deliberate techniques:</p>
 <ul>
 <li><p>a Hugging Face BytePiece Tokenizer to tokenize the corpus into subwords. This would make it possible to train the model on a much larger vocabulary of unique words without running into high computational costs.</p></li>
 <li><p>a Sequence2Sequence (Seq2Seq) LSTM encoder-decoder model equipped with a Luong attention mechanism, which would allow the model to dynamically shift its focus to different parts of the input sequence as it generated each next word prediction.</p></li>
 </ul>
-<p>Let’s explore the model architecture more on the next slide:</p>
 </section>
-<section id="model-architecture" class="slide level2 scrollable">
-<h2>Model Architecture</h2>
+<section id="the-algorithm-cont." class="slide level2 scrollable">
+<h2>The Algorithm cont.</h2>
 <iframe src="seq2seq_diagram.html" width="100%" height="650px" style="border: none; border-radius: 12px;" allowfullscreen="">
 </iframe>
 </section>
@@ -169,8 +168,8 @@ Anthony DiFiore
 <p>The app is easy to use: simply enter a phrase or sentence (anywhere from 3-50 words!), adjust the “Temperature” setting from 0.1 to 2.0 (lower values produce more conservative predictions, while higher values produce more creative predictions), and click the button! The chatbot will respond with its next word predictions.</p>
 <p>Enjoy the app. You can also view a demo embedded on the next slide.</p>
 </section>
-<section id="app-demo" class="slide level2 scrollable">
-<h2>App Demo</h2>
+<section id="instructions" class="slide level2 scrollable">
+<h2>Instructions</h2>
 <iframe src="https://ardifiore-capstone-project-chatbot.share.connect.posit.cloud" title="Are You Thinking What I'm Thinking?" width="100%" height="650px" style="overflow: auto;" frameborder="0" data-external="1">
 </iframe>
 
